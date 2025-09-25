@@ -8,14 +8,22 @@ class SplitCompressor(Compressor):
     def __init__(self):
         super().__init__()
 
-    def compress(self, arr:np.ndarray[int]) -> tuple[np.ma.MaskedArray[bool],int]:
+    def compress(self, arr:np.ndarray[int]) -> tuple[np.ndarray[bool],int,int]:
+        """The method that compress int32 integer into smaller integers.
 
+        Args:
+            arr (np.ndarray[int]): The array of integer to compress.
+
+        Returns:
+            tuple[np.ndarray[bool],int,int]: A tuple containing in 1st position the compressed array, in 2nd the necessary bit length of the biggest element of the uncompressed array and in 3rd the length of the uncompressed array.
+        """
+        
         # Get the necessary bit size of the biggest element in array
         maxBitLength = self._getMaxBitLength(arr)
         
         # Compute the required size for the compressed Array and create the array
         compressedArrayLength = INT_ENCODING_SIZE * float.__ceil__(len(arr) * (maxBitLength+1) / INT_ENCODING_SIZE)
-        compressedArr = np.ma.MaskedArray(np.zeros(compressedArrayLength, dtype=bool), mask=True)
+        compressedArr = np.zeros(compressedArrayLength, dtype=bool)
 
         # Compress the integer array into the boolean array
         for arrIndex, elem in enumerate(arr):
@@ -37,33 +45,36 @@ class SplitCompressor(Compressor):
             for bitIndex, bitElem in enumerate(correctedBitVal[-maxBitLength:]):
                 compressedArr[arrIndex*(maxBitLength+1)+bitIndex+1] = True if bitElem == "1" else False
 
-        return (compressedArr, maxBitLength)
+        return (compressedArr, maxBitLength, len(arr))
     
     def decompress(self, *args:tuple[Any]) -> np.ndarray[int]:
-        """The method to be implemented/overrided for decompressing the array
+        """The method to decompress the array compressed using this class.
 
         Args:
-            *args (tuple[Any]): 1st index is the array and the second is the necessary bit length of the biggest element of the uncompressed array.
+            *args (tuple[Any]): 1st index is the array, the second is the necessary bit length of the biggest element of the uncompressed array and the third of the uncompressed array.
             
         Returns:
             np.ndarray[int]: The decompressed integer array.
         """
         
         # Retrieve the variables and initialise the function variables
-        compressedArr, maxBitLength, *_ = args
+        compressedArr, maxBitLength, initialLength, *_ = args
         decompressedArr = []
-        count = 0
+        arrIndex = 0
         
         # Loop through the compressed array
         while True:
-            # Avoid OutOfBound error
-            if (count+1)*(maxBitLength+1) > len(compressedArr):
+            
+            # get the windows index to look at
+            endPos = (arrIndex+1)*(maxBitLength+1)
+            startPos = arrIndex*(maxBitLength+1)
+            
+            # Quit if out of bound or all number are uncompressed
+            if endPos > len(compressedArr) or len(decompressedArr) >= initialLength:
                 break
             
             # If all number are decompressed then quit
-            val = compressedArr[count*(maxBitLength+1):(count+1)*(maxBitLength+1)]
-            if val[0] is np.ma.masked:
-                break
+            val = compressedArr[startPos:endPos]
             
             # Otherwise, decode the element
             decompressedVal = ["0" if i == False else "1" for i in val.tolist()]
@@ -72,7 +83,7 @@ class SplitCompressor(Compressor):
             
             # Update the decompressed array and continue
             decompressedArr.append(int("".join(decompressedVal), base = 2))
-            count += 1
+            arrIndex += 1
 
         return np.array(decompressedArr, dtype=int)
         
@@ -81,7 +92,7 @@ class SplitCompressor(Compressor):
 
         Args:
             i (int): The position to look at.
-            *args (tuple[Any]): 1st index is the array and the second is the necessary bit length of the biggest element of the uncompressed array.
+            *args (tuple[Any]): 1st index is the array, the second is the necessary bit length of the biggest element of the uncompressed array and in 3rd the length of the uncompressed array.
 
 
         Returns:

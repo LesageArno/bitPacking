@@ -9,13 +9,13 @@ class NoSplitCompressor(Compressor):
         super().__init__()
 
     def compress(self, arr:np.ndarray[int]) -> tuple[np.ndarray[bool],int,int,int]:
-        """The method to compress
+        """The method that compress int32 integer into smaller integers.
 
         Args:
-            arr (np.ndarray[int]): _description_
+            arr (np.ndarray[int]): The array of integer to compress
 
         Returns:
-            tuple[np.ndarray[bool],int,int,int]: _description_
+            tuple[np.ndarray[bool],int,int,int]: A tuple containing in 1st position the compressed array, in 2nd the necessary bit length of the biggest element of the uncompressed array, in 3rd the index for which we need to move on next compressed integer, and in 4th the length of the uncompressed array.
         """
         # Get the necessary bit size of the biggest element in array
         maxBitLength = self._getMaxBitLength(arr)
@@ -62,6 +62,14 @@ class NoSplitCompressor(Compressor):
         return (compressedArr, maxBitLength, criticalIndex, len(arr))
     
     def decompress(self, *args:tuple[Any]) -> np.ndarray[int]:
+        """The method to decompress the array compressed using this class.
+
+        Args:
+            *args (tuple[Any]): 1st index is the array, the second is the necessary bit length of the biggest element of the uncompressed array, the third is the critical index and the fourth the length of the uncompressed array 
+            
+        Returns:
+            np.ndarray[int]: The decompressed integer array.
+        """
         
         # Retrive and compute necessary information
         compressedArr, maxBitLength, criticalIndex, initialLength, *_ = args
@@ -106,6 +114,16 @@ class NoSplitCompressor(Compressor):
         return np.array(decompressedArr, dtype=int)
         
     def get(self, i:int, *args:tuple[Any]) -> int:
+        """Get the value at the i-th position of the compressed array.
+
+        Args:
+            i (int): The position to look at.
+            *args (tuple[Any]): A tuple containing in 1st position the compressed array, in 2nd the necessary bit length of the biggest element of the uncompressed array, in 3rd the index for which we need to move on next compressed integer, and in 4th the length of the uncompressed array.
+
+        Returns:
+            int: The value of the i-th position.
+        """
+        
         # Retrieve the variables and compute the cell to look at
         compressedArr, maxBitLength, *_ = args
         intCompressedCapacity = (INT_ENCODING_SIZE/(maxBitLength+1)).__floor__()

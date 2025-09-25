@@ -3,10 +3,9 @@ from Compressor.SplitCompressor import SplitCompressor
 from Compressor.NoSplitCompressor import NoSplitCompressor
 from Compressor.OverflowCompressor import OverflowCompressor
 
-
 from typing import Literal, Any
 import numpy as np
-from sys import getsizeof
+
 
 def createCompressor(mode:Literal["nosplit","split","overflow"]) -> Compressor:
     return {
