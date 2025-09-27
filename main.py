@@ -5,6 +5,7 @@ from Compressor.OverflowCompressor import OverflowCompressor
 
 from typing import Literal, Any
 import numpy as np
+from copy import deepcopy
 
 
 def createCompressor(mode:Literal["nosplit","split","overflow"]) -> Compressor:
@@ -17,34 +18,39 @@ def createCompressor(mode:Literal["nosplit","split","overflow"]) -> Compressor:
 
 class BitPacking:
     def __init__(self, mode:Literal["nosplit","split","overflow"]):
-        self.compressor:Compressor = createCompressor(mode)
-        self.arr:np.ndarray[int]
-        self.compressed:tuple[Any]
+        self.__compressor:Compressor = createCompressor(mode)
+        self.__arr:np.ndarray[int]
+        self.__compressed:tuple[Any]
 
     def getArr(self) -> np.ndarray[int]:
-        return self.arr
+        return self.__arr
     
     def getCompressedArr(self) -> tuple[Any]:
-        return self.compressed
+        return self.__compressed
     
     def setArr(self, arr:np.ndarray[int]) -> None:
-        self.arr = arr
+        self.__arr = arr
     
     def compress(self) -> None:
-        self.compressed = self.compressor.compress(self.arr)
+        self.__compressed = self.__compressor.compress(self.__arr)
     
     def decompress(self) -> None:
-        self.arr = self.compressor.decompress(*self.compressed)
+        self.__arr = self.__compressor.decompress(*self.__compressed)
 
-    def get(self, i:int) -> None:
-        if not self.compressed:
-            return self.arr[i]
-        return self.compressor.get(i, *self.compressed)
+    def get(self, i:int, compressed:bool=False) -> int:
+        if not compressed:
+            return self.__arr[i]
+        return self.__compressor.get(i, *self.__compressed)
+    
+    def transmit(self, compressed:bool = True) -> None:
+        if compressed:
+            deepcopy(self.__compressed)
+        else:
+            deepcopy(self.__arr)
 
-
+    def changeMode(self, mode:Literal["nosplit","split","overflow"]) -> None:
+        self.__compressor = createCompressor(mode)
+        self.__compressed = None
 
 if __name__ == "__main__":
-    a:list[int] = list(range(21))
-    bp = BitPacking("split")
-    bp.setArr(a)
-    bp.compress()
+    ...
