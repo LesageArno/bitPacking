@@ -68,10 +68,10 @@ I reserve the right to ask for an oral presentation to obtain further informatio
 
 #### **TODO:** 
 - First representation: done (+tested)
-- Second representation: in progress (Compression done)
-- Third representation: todo
+- Second representation: done
+- Third representation: done
 - Negative: Handeled
 - GitHub: todo
 - Report: todo
 - Factory: done
-- Benchmark: todo
+- Benchmark: done
