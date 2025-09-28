@@ -20,11 +20,11 @@ This part contains instructions to properly set up the project and run it.
 ### Prerequisites
 This project was developped using **Python 1.12.0** (install <a href="https://www.python.org/downloads/release/python-3120/">here</a>) and require the language to run properly.
 
-Additionally, the project make usage of several external libraries (see <a href="requirements.txt">requirements.txt</a>) and therefore require the installation of <a href="https://pip.pypa.io/en/stable/installation/">pip</a> (the Python library manager).
+Additionally, the project make usage of several external libraries (see <a href="OTHERS//requirements.txt">requirements.txt</a>) and therefore require the installation of <a href="https://pip.pypa.io/en/stable/installation/">pip</a> (the Python library manager).
 
 To install the right version of each required library (NumPy, SciPy and PyTest), you may use the following command (Windows 10/11):
 
-    pip install -r .\README\requirements.txt
+    pip install -r .\OTHERS\requirements.txt
 
 ### Installing
 
@@ -77,3 +77,4 @@ Explain what these tests test and why
 Checks if the best practices and the right coding style has been used.
 
     Give an example
+
