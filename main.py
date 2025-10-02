@@ -5,20 +5,22 @@ from Compressor.OverflowCompressor import OverflowCompressor
 
 from typing import Literal, Any
 import numpy as np
-from copy import deepcopy
+
+import pickle
+import io
 
 
-def createCompressor(mode:Literal["nosplit","split","overflow"]) -> Compressor:
+def createCompressor(mode:Literal["nosplit","split","overflow"], *args) -> Compressor:
     return {
         "nosplit": NoSplitCompressor,
         "split": SplitCompressor,
         "overflow": OverflowCompressor
-    }[mode]()
+    }[mode](*args)
 
 
 class BitPacking:
-    def __init__(self, mode:Literal["nosplit","split","overflow"]):
-        self.__compressor:Compressor = createCompressor(mode)
+    def __init__(self, mode:Literal["nosplit","split","overflow"], *args):
+        self.__compressor:Compressor = createCompressor(mode, *args)
         self.__arr:np.ndarray[int]
         self.__compressed:tuple[Any]
 
@@ -43,10 +45,17 @@ class BitPacking:
         return self.__compressor.get(i, *self.__compressed)
     
     def transmit(self, compressed:bool = True) -> None:
-        if compressed:
-            deepcopy(self.__compressed)
-        else:
-            deepcopy(self.__arr)
+        # Simulate communication
+        ## Serialisation
+        compressed_bytes = pickle.dumps(self.__compressed if compressed else self.__arr)
+        buf = io.BytesIO()
+        
+        # Send
+        buf.write(compressed_bytes)
+        
+        # Reed
+        buf.seek(0)
+        buf.read()
 
     def changeMode(self, mode:Literal["nosplit","split","overflow"]) -> None:
         self.__compressor = createCompressor(mode)

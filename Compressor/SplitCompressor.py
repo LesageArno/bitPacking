@@ -1,6 +1,7 @@
 from Compressor.AbstractCompressor import Compressor
 from typing import Any
 import numpy as np
+import bitarray
 
 INT_ENCODING_SIZE = 32 #32 bits per integer
 
@@ -8,14 +9,14 @@ class SplitCompressor(Compressor):
     def __init__(self):
         super().__init__()
 
-    def compress(self, arr:np.ndarray[int]) -> tuple[np.ndarray[bool],int,int]:
+    def compress(self, arr:np.ndarray[int]) -> tuple[bitarray.bitarray,int,int]:
         """The method that compress int32 integer into smaller integers.
 
         Args:
             arr (np.ndarray[int]): The array of integer to compress.
 
         Returns:
-            tuple[np.ndarray[bool],int,int]: A tuple containing in 1st position the compressed array, in 2nd the necessary bit length of the biggest element of the uncompressed array and in 3rd the length of the uncompressed array.
+            tuple[bitarray.bitarray,int,int]: A tuple containing in 1st position the compressed array, in 2nd the necessary bit length of the biggest element of the uncompressed array and in 3rd the length of the uncompressed array.
         """
         
         # Get the necessary bit size of the biggest element in array
@@ -23,7 +24,7 @@ class SplitCompressor(Compressor):
         
         # Compute the required size for the compressed Array and create the array
         compressedArrayLength = INT_ENCODING_SIZE * float.__ceil__(len(arr) * (maxBitLength+1) / INT_ENCODING_SIZE)
-        compressedArr = np.zeros(compressedArrayLength, dtype=bool)
+        compressedArr = bitarray.bitarray(np.zeros(compressedArrayLength, dtype=bool).tolist())
 
         # Compress the integer array into the boolean array
         for arrIndex, elem in enumerate(arr):
@@ -124,4 +125,6 @@ if __name__ == "__main__":
     sC = SplitCompressor()
     
     val = sC.compress(arr_SmallInt)
-    sum(arr_SmallInt != sC.decompress(*val))
+    
+    print(sC.get(95000, *val), arr_SmallInt[95000])
+    print(sum(arr_SmallInt != sC.decompress(*val)))

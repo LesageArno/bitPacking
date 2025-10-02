@@ -1,6 +1,7 @@
 from Compressor.AbstractCompressor import Compressor
 from typing import Any
 import numpy as np
+import bitarray
 
 INT_ENCODING_SIZE = 32 #32 bits per integer
 
@@ -8,14 +9,14 @@ class NoSplitCompressor(Compressor):
     def __init__(self):
         super().__init__()
 
-    def compress(self, arr:np.ndarray[int]) -> tuple[np.ndarray[bool],int,int,int]:
+    def compress(self, arr:np.ndarray[int]) -> tuple[bitarray.bitarray,int,int,int]:
         """The method that compress int32 integer into smaller integers.
 
         Args:
             arr (np.ndarray[int]): The array of integer to compress
 
         Returns:
-            tuple[np.ndarray[bool],int,int,int]: A tuple containing in 1st position the compressed array, in 2nd the necessary bit length of the biggest element of the uncompressed array, in 3rd the index for which we need to move on next compressed integer, and in 4th the length of the uncompressed array.
+            tuple[bitarray.bitarray,int,int,int]: A tuple containing in 1st position the compressed array, in 2nd the necessary bit length of the biggest element of the uncompressed array, in 3rd the index for which we need to move on next compressed integer, and in 4th the length of the uncompressed array.
         """
         # Get the necessary bit size of the biggest element in array
         maxBitLength = self._getMaxBitLength(arr)
@@ -26,7 +27,7 @@ class NoSplitCompressor(Compressor):
         
         # Intialise the compressed array
         compressedArrayLength = INT_ENCODING_SIZE*(len(arr)/intCompressedCapacity).__ceil__()
-        compressedArr = np.zeros(compressedArrayLength, dtype=bool)
+        compressedArr = bitarray.bitarray(np.zeros(compressedArrayLength, dtype=bool).tolist())
 
         # Compute the row necessary shift of position when moving on the next int32 
         criticalShift = INT_ENCODING_SIZE - intCompressedCapacity * (maxBitLength+1)

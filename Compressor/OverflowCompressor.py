@@ -1,27 +1,35 @@
 from Compressor.AbstractCompressor import Compressor
 from typing import Any
 import numpy as np
+import bitarray
 
 INT_ENCODING_SIZE = 32 #32 bits per integer
 
 class OverflowCompressor(Compressor):
-    def __init__(self):
+    def __init__(self, threshold:int = 12):
         super().__init__()
+        self.threshold = max(1,threshold)
         
-    def compress(self, arr:np.ndarray[int], threshold:int|float = 0.7) -> tuple[np.ndarray[bool],int,np.ndarray[bool],int,int]:
+    def compress(self, arr:np.ndarray[int]) -> tuple[bitarray.bitarray,int,bitarray.bitarray,int,int]:
         
-        # If the threshold is a float, take the corresponding quantile bit_length as threshold for overflow. Otherwise, use the give bit threshold
-        overflowThresholdBitLength = np.quantile(arr, threshold).__abs__().__floor__().bit_length() if isinstance(threshold, float) else threshold
+        # Just rename threshold for safety
+        overflowThresholdBitLength = self.threshold
         
         # Compute the max bit length of the supremum element in the overflow area and outside
-        maxOverflowBitLength = int(arr[arr.__abs__() >= 2**overflowThresholdBitLength].__abs__().max()).bit_length()
-        maxBitLength = int(arr[arr.__abs__() < 2**overflowThresholdBitLength].__abs__().max()).bit_length()
-        
+        try:
+            maxOverflowBitLength = int(arr[arr.__abs__() >= 2**overflowThresholdBitLength].__abs__().max()).bit_length()
+        except ValueError:
+            maxOverflowBitLength = 0
+        try:
+            maxBitLength = int(arr[arr.__abs__() < 2**overflowThresholdBitLength].__abs__().max()).bit_length()
+        except ValueError:
+            maxBitLength = 0
+
         # Compute the length of the areas and create the compressed and overflow array
-        compressedArrayLength = INT_ENCODING_SIZE * float.__ceil__(len(arr) * (maxBitLength+1) / INT_ENCODING_SIZE)
+        compressedArrayLength = INT_ENCODING_SIZE * float.__ceil__(len(arr) * (maxBitLength+2) / INT_ENCODING_SIZE)
         overflowArrayLength = INT_ENCODING_SIZE * float.__ceil__(len(arr) * (maxOverflowBitLength+1) / INT_ENCODING_SIZE)
-        compressedArr = np.zeros(compressedArrayLength, dtype=bool)
-        overflowArr = np.zeros(overflowArrayLength, dtype=bool)
+        compressedArr = bitarray.bitarray(np.zeros(compressedArrayLength, dtype=bool).tolist())
+        overflowArr = bitarray.bitarray(np.zeros(overflowArrayLength, dtype=bool).tolist())
 
         # Initialise the necessary shift in position depending on the number of overflowed integer 
         overflowCount = 0
@@ -49,7 +57,8 @@ class OverflowCompressor(Compressor):
                 correctedBitVal = "0"*(maxOverflowBitLength-len(correctedBitVal))+correctedBitVal
                 
                 # Place the compressed integer within the overflow area and update the counter of overflowed numbers
-                overflowArr[overflowStartPos+1:overflowStartPos+maxOverflowBitLength+1] = [True if bitElem == "1" else False for bitElem in correctedBitVal]
+                for bitIndex, bitElem in enumerate(correctedBitVal):
+                    overflowArr[overflowStartPos+1+bitIndex] = True if bitElem == "1" else False
                 overflowCount += 1
                 continue
             
@@ -64,10 +73,11 @@ class OverflowCompressor(Compressor):
             
             # Correct the length of bits to maxBitLength
             correctedBitVal = bitVal[-maxBitLength:].strip("-")
-            correctedBitVal = "0"*(maxBitLength-len(correctedBitVal))+correctedBitVal
+            correctedBitVal = ("0"*(maxBitLength-len(correctedBitVal))+correctedBitVal)[:maxBitLength+1]
             
             # Put the compressed integer in the correct place
-            compressedArr[startPos+2:startPos+2+maxBitLength] = [True if bitElem == "1" else False for bitElem in correctedBitVal]
+            for bitIndex, bitElem in enumerate(correctedBitVal):
+                compressedArr[startPos+2+bitIndex] = True if bitElem == "1" else False
         
         return compressedArr, maxBitLength, overflowArr, maxOverflowBitLength, len(arr)
         
@@ -154,7 +164,7 @@ class OverflowCompressor(Compressor):
 
 if __name__ == "__main__":
     arr_SmallInt = np.random.randint(-2**8+1, 2**8, 100_000)
-    oC = OverflowCompressor()
+    oC = OverflowCompressor(12)
     
     val = oC.compress(arr_SmallInt)
     
