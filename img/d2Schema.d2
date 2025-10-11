@@ -1,0 +1,46 @@
+"{abstract}\nCompressor": {
+  AbstractMethods: {
+    compress: "compress"
+    decompress: "decompress"
+    get: "get"
+  }
+  Methods: {
+    getMaxBitLength: "{protected}\ngetMaxBitLength"
+  }
+}
+
+SplitCompressor
+NoSplitCompressor
+OverflowCompressor: {
+  attributes: {
+    threshold: "threshold"
+  }
+}
+
+BitPacking: {
+  attributes: {
+    arr: "{private}\narr"
+    compressor: "{private}\ncompressor"
+    compressed: "{private}\ncompressed"
+  }
+  Methods: {
+    getArr: "getArr"
+    getCompressedArr: "getCompressedArr"
+    setArr: "setArr"
+    compress: "compress"
+    decompress: "decompress"
+    get: "get"
+    transmit: "transmit"
+    changeMode: "changeMode"
+  }
+}
+
+createCompressor -> "{abstract}\nCompressor": instantiates
+
+SplitCompressor -> "{abstract}\nCompressor": subclassOf
+NoSplitCompressor -> "{abstract}\nCompressor": subclassOf
+OverflowCompressor -> "{abstract}\nCompressor": subclassOf
+BitPacking -> createCompressor: "uses"
+BitPacking.Methods.compress -> "{abstract}\nCompressor".AbstractMethods.compress: "wraps"
+BitPacking.Methods.decompress -> "{abstract}\nCompressor".AbstractMethods.decompress: "wraps"
+BitPacking.Methods.get -> "{abstract}\nCompressor".AbstractMethods.get: "wraps"
