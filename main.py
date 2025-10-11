@@ -53,7 +53,7 @@ class BitPacking:
         # Send
         buf.write(compressed_bytes)
         
-        # Reed
+        # Read
         buf.seek(0)
         buf.read()
 

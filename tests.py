@@ -20,14 +20,10 @@ overflow = {
 testFiles = {}
 for file in os.listdir("IN"):
     testFiles[file.strip(".in")] = np.fromfile(f"IN\\{file}", dtype=np.int32, sep=" ")
-    
-# Benchmark file
-outPath = "OUT\\benchmarkOutput.out"
-with open(outPath, "w") as file:
-    file.write("compressor, file, function, time\n")
-    
-    
-    
+
+testFiles["32bit"] = np.array([2**32-1, -2**32+1, 2**31+1])
+testFiles["unitary0"] = np.array([0])
+testFiles["unitary32"] = np.array([2**32-1])
     
 
 # Test Split compression process
@@ -60,10 +56,9 @@ def test_nosplitCompression():
         nosplit.decompress()
         assert np.all(nosplit.getArr()==testVal), f"{key}: nosplit compression process not working."
 
-# Test Overflow compression process 
+# Test Overflow compression process
 def test_overflowCompression():
     for overflowKey in overflow.keys(): 
-        print(overflowKey)
         for key, testVal in testFiles.items():
             overflow[overflowKey].setArr(testVal)
             overflow[overflowKey].compress()

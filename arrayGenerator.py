@@ -27,10 +27,15 @@ testSets = {
     "boltzmann_small": smallBoltzmann.rvs(1_000, random_state=0),
     "boltzmann_medium": smallBoltzmann.rvs(100_000, random_state=1),
     "boltzmann_large": smallBoltzmann.rvs(1_000_000, random_state=2),
-    "boltzmann_superLarge": smallBoltzmann.rvs(4_000_000, random_state=2)
+    "boltzmann_superLarge": smallBoltzmann.rvs(4_000_000, random_state=2),
+    
+    "superLargeInt_small": rng.randint(-2**31, 2**31-1, 1_000),
+    "superLargeInt_medium": rng.randint(-2**31, 2**31-1, 100_000),
+    "superLargeInt_large": rng.randint(-2**31, 2**31-1, 1_000_000)
 }
 
 # Save the datas
 for key, value in testSets.items():
     with open(f"IN\\{key}.in", "w") as file:
         value.tofile(file, sep=" ")
+

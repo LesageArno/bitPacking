@@ -81,7 +81,7 @@ def proceedBenchmark(compressor:main.BitPacking, out:str = "OUT\\benchmark.out")
 
 
 # Proceed Benchmark
-#proceedBenchmark(split, "OUT\\splitBenchmark.out")
-#proceedBenchmark(nosplit, "OUT\\nosplitBenchmark.out")
+proceedBenchmark(split, "OUT\\splitBenchmark.out")
+proceedBenchmark(nosplit, "OUT\\nosplitBenchmark.out")
 for key, value in overflow.items():
     proceedBenchmark(value, f"OUT\\{key}Benchmark.out")
