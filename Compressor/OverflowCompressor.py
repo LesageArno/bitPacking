@@ -160,7 +160,7 @@ class OverflowCompressor(Compressor):
                 return int(("-" if neg else "") + "".join(decompressedVal), base=2)
             
             # If it is not the one we want and it is in the overflow area, update the shift
-            if compressedArr[lookAt]:
+            if compressedArr[lookAt] == True:
                 overflowCount += 1
 
 

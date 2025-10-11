@@ -9,14 +9,14 @@ class NoSplitCompressor(Compressor):
     def __init__(self):
         super().__init__()
 
-    def compress(self, arr:np.ndarray[int]) -> tuple[bitarray.bitarray, bitarray.bitarray,int,int,int]:
+    def compress(self, arr:np.ndarray[int]) -> tuple[bitarray.bitarray, bitarray.bitarray,int,int]:
         """The method that compress int32 integer into smaller integers.
 
         Args:
             arr (np.ndarray[int]): The array of integer to compress
 
         Returns:
-            tuple[bitarray.bitarray, bitarray.bitarray,int,int,int]: A tuple containing in 1st position the compressed array, in 2nd position an array containing the signs, in 3rd the necessary bit length of the biggest element of the uncompressed array, in 4th the index for which we need to move on next compressed integer, and in 5th the length of the uncompressed array.
+            tuple[bitarray.bitarray, bitarray.bitarray,int,int]: A tuple containing in 1st position the compressed array, in 2nd position an array containing the signs, in 3rd the necessary bit length of the biggest element of the uncompressed array, and in 4th the length of the uncompressed array.
         """
         # Get the necessary bit size of the biggest element in array
         maxBitLength = max(self._getMaxBitLength(arr), 1)
@@ -62,20 +62,20 @@ class NoSplitCompressor(Compressor):
             for bitIndex, bitElem in enumerate(correctedBitVal[-maxBitLength:]):
                 compressedArr[pos+bitIndex] = True if bitElem == "1" else False
 
-        return (compressedArr, signArr, maxBitLength, criticalIndex, len(arr))
+        return (compressedArr, signArr, maxBitLength, len(arr))
     
     def decompress(self, *args:tuple[Any]) -> np.ndarray[int]:
         """The method to decompress the array compressed using this class.
 
         Args:
-            *args (tuple[Any]): A tuple containing in 1st position the compressed array, in 2nd position an array containing the signs, in 3rd the necessary bit length of the biggest element of the uncompressed array, in 4th the index for which we need to move on next compressed integer, and in 5th the length of the uncompressed array.
+            *args (tuple[Any]): A tuple containing in 1st position the compressed array, in 2nd position an array containing the signs, in 3rd the necessary bit length of the biggest element of the uncompressed array, and in 4th the length of the uncompressed array.
             
         Returns:
             np.ndarray[int]: The decompressed integer array.
         """
         
         # Retrive and compute necessary information
-        compressedArr, signArr, maxBitLength, criticalIndex, initialLength, *_ = args
+        compressedArr, signArr, maxBitLength, initialLength, *_ = args
 
         # Apply get repeatidely
         return np.array([self.get(i, *args) for i in range(initialLength)])
@@ -85,7 +85,7 @@ class NoSplitCompressor(Compressor):
 
         Args:
             i (int): The position to look at.
-            *args (tuple[Any]): A tuple containing in 1st position the compressed array, in 2nd position an array containing the signs, in 3rd the necessary bit length of the biggest element of the uncompressed array, in 4th the index for which we need to move on next compressed integer, and in 5th the length of the uncompressed array.
+            *args (tuple[Any]): A tuple containing in 1st position the compressed array, in 2nd position an array containing the signs, in 3rd the necessary bit length of the biggest element of the uncompressed array, and in 4th the length of the uncompressed array.
 
         Returns:
             int: The value of the i-th position.
