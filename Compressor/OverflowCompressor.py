@@ -117,9 +117,9 @@ class OverflowCompressor(Compressor):
             
             # and decode it before adding it to the decompressed array
             decompressedVal = ["0" if i == False else "1" for i in val.tolist()]
-            decompressedArr.append(int(("-" if neg else "") + "".join(decompressedVal), base=2))
+            decompressedArr.append(int(("-" if neg else "") + "".join(decompressedVal), base=2) if decompressedVal != [] else 0)
         
-        return np.array(decompressedArr, dtype=np.int32)    
+        return np.array(decompressedArr)    
 
     def get(self, i:int, *args:tuple[Any]) -> int:
         
@@ -155,6 +155,8 @@ class OverflowCompressor(Compressor):
                 
                 # and decode it before adding it to the decompressed array
                 decompressedVal = ["0" if i == False else "1" for i in val.tolist()]
+                if decompressedVal == []:
+                    return 0
                 return int(("-" if neg else "") + "".join(decompressedVal), base=2)
             
             # If it is not the one we want and it is in the overflow area, update the shift
@@ -163,11 +165,11 @@ class OverflowCompressor(Compressor):
 
 
 if __name__ == "__main__":
-    arr_SmallInt = np.random.randint(-2**8+1, 2**8, 100_000)
+    arr = np.array([0])
     oC = OverflowCompressor(12)
     
-    val = oC.compress(arr_SmallInt)
+    val = oC.compress(arr)
     
-    print(arr_SmallInt[18967] == oC.get(18967, *val)) 
+    print(arr[0] == oC.get(0, *val)) 
     
-    print(sum(arr_SmallInt != oC.decompress(*val)))
+    print(sum(arr != oC.decompress(*val)))

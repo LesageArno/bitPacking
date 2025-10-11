@@ -67,14 +67,14 @@ class SplitCompressor(Compressor):
         while True:
             
             # get the windows index to look at
-            endPos = (arrIndex+1)*(maxBitLength+1)
             startPos = arrIndex*(maxBitLength+1)
+            endPos = (arrIndex+1)*(maxBitLength+1)
             
             # Quit if out of bound or all number are uncompressed
             if endPos > len(compressedArr) or len(decompressedArr) >= initialLength:
                 break
             
-            # If all number are decompressed then quit
+            # Take values
             val = compressedArr[startPos:endPos]
             
             # Otherwise, decode the element
@@ -83,10 +83,10 @@ class SplitCompressor(Compressor):
                 decompressedVal[0] = "-"
             
             # Update the decompressed array and continue
-            decompressedArr.append(int("".join(decompressedVal), base = 2))
+            decompressedArr.append(int("".join(decompressedVal), base = 2)  if decompressedVal != [] else 0)
             arrIndex += 1
 
-        return np.array(decompressedArr, dtype=int)
+        return np.array(decompressedArr)
         
     def get(self, i:int, *args:tuple[Any]) -> int:
         """Get the value at the i-th position of the compressed array.
@@ -112,7 +112,7 @@ class SplitCompressor(Compressor):
         # Convert the number into base 10
         representation = "".join(["0" if i == False else "1" for i in num])
         sign = representation[0]
-        val = int(representation[1:], base=2)
+        val = int(representation[1:], base=2) if representation[1:] != "" else 0
         
         # Return the value and the sign
         if sign == "1":
@@ -121,10 +121,10 @@ class SplitCompressor(Compressor):
 
 
 if __name__ == "__main__":
-    arr_SmallInt = np.random.randint(-2**8+1, 2**8, 100_000)
+    arr = np.array([0])
     sC = SplitCompressor()
     
-    val = sC.compress(arr_SmallInt)
+    val = sC.compress(arr)
     
-    print(sC.get(95000, *val), arr_SmallInt[95000])
-    print(sum(arr_SmallInt != sC.decompress(*val)))
+    print(sC.get(0, *val), arr[0])
+    print(sum(arr != sC.decompress(*val)))
