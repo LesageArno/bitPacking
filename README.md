@@ -101,7 +101,7 @@ Finally, you will find the input files within `IN/` the output files (benchmark)
 This part explains the tests performed and how to use them.
 
 ### What tests
-For the tests, we propose 4 main tests which are then used 12x7 times for each input files and compressor (overflow compressor using multiple thresholds). In total, we test the behaviour of our systsem on 336 independent tests.
+For the tests, we propose 4 main tests which are then used 15x7 times for each input files and compressor (overflow compressor using multiple thresholds) + 3x7 for special datasets (Dataset with only one value, one zero or only integer on 32 bits.). In total, we test the behaviour of our systsem on 504 independent tests.
 
 - The first main test consists of checking whether the input of the system (uncompressed array) corresponds to the output of the system (decompression after compression). The structure of this test is the following:
 ```py
