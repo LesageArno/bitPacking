@@ -84,6 +84,35 @@ ggplot(allClassifierEM, aes(x = inFile, y = mu, color = func, group = func)) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
     ggtitle("Average transmission time with respect to the compressor and benchmark output")
 
+##### Average transmission time differenec with respect to compressor and Benchmark output #####
+allClassifierEM <- getErrorMargin(allClassifier)
+allClassifierDiff <- allClassifierEM %>%
+    select(inFile, source, func, mu, EM95_low, EM95_high) %>%
+    tidyr::pivot_wider(
+        names_from = func,
+        values_from = c(mu, EM95_low, EM95_high)
+    ) %>%
+    mutate(
+        diff_mu = mu_transmitRaw - mu_transmit,
+        diff_low = EM95_low_transmitRaw - EM95_low_transmit,
+        diff_high = EM95_high_transmitRaw - EM95_high_transmit
+    )
+
+ggplot(allClassifierDiff, aes(x = inFile, y = diff_mu)) +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+    geom_point(size = 3, color = "steelblue") +
+    geom_errorbar(aes(ymin = diff_low, ymax = diff_high), width = 0.2, color = "steelblue") +
+    facet_wrap(~source) +
+    labs(
+        x = "Benchmark files",
+        y = "Difference in average transmission time (transmitRaw - transmit)",
+        title = "Average difference in transmission time between transmitRaw and transmit",
+        subtitle = "Negative values → transmit slower"
+    ) +
+    theme(
+        axis.text.x = element_text(angle = 90, hjust = 1),
+        panel.grid.minor = element_blank()
+    )
 ##### Total average process time with respect to compressor and benchmark output ####
 allClassifierTimeDecomp <- getTimeDecomp(allClassifier)
 ggplot(allClassifierTimeDecomp, aes(x = inFile, y = mu, fill = func)) +
@@ -102,115 +131,102 @@ ggplot(allClassifierTimeDecomp, aes(x = inFile, y = mu, fill = func)) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
     ggtitle("Total average process time with respect to compressor and benchmark output")
 
-#### Hypothesis testing ####
-# For all compressor
-DescTools::SignTest(
+
+
+
+
+
+
+#### Hypothesis testing (permutation t-test) ####
+##### Is transmit time generally smaller than transmit raw time among all classifiers ####
+transmitTime <- c(
     as.vector(allClassifier %>% filter(func=="transmit") %>% select(time))$time,
-    as.vector(allClassifier %>% filter(func=="transmitRaw") %>% select(time))$time,
-    alternative = "less"
+    as.vector(allClassifier %>% filter(func=="transmitRaw") %>% select(time))$time
 )
+group = as.factor(c(rep("transmit", length(transmitTime)%/%2), rep("transmitRaw", length(transmitTime)%/%2)))
+coin::independence_test(transmitTime~group, alternative = "less", distribution = "approximate")
+#'  	Approximative General Independence Test
+#'
+#' data:  transmitTime by group (transmit, transmitRaw)
+#' Z = -4.6919, p-value < 1e-04
+#' alternative hypothesis: less
 
-# For Split compressor
-DescTools::SignTest(
-    as.vector(allClassifier %>% filter(func=="transmit", source=="Split") %>% select(time))$time,
-    as.vector(allClassifier %>% filter(func=="transmitRaw", source=="Split") %>% select(time))$time,
-    alternative = "less"
-)
 
-# For NoSplit compressor
-DescTools::SignTest(
-    as.vector(allClassifier %>% filter(func=="transmit", source=="NoSplit") %>% select(time))$time,
-    as.vector(allClassifier %>% filter(func=="transmitRaw", source=="NoSplit") %>% select(time))$time,
-    alternative = "less"
-)
 
-# For Overflow1 compressor
-DescTools::SignTest(
-    as.vector(allClassifier %>% filter(func=="transmit", source=="Overflow1") %>% select(time))$time,
-    as.vector(allClassifier %>% filter(func=="transmitRaw", source=="Overflow1") %>% select(time))$time,
-    alternative = "less"
-)
 
-# For Overflow2 compressor
-DescTools::SignTest(
-    as.vector(allClassifier %>% filter(func=="transmit", source=="Overflow2") %>% select(time))$time,
-    as.vector(allClassifier %>% filter(func=="transmitRaw", source=="Overflow2") %>% select(time))$time,
-    alternative = "less"
-)
 
-# For Overflow4 compressor
-DescTools::SignTest(
-    as.vector(allClassifier %>% filter(func=="transmit", source=="Overflow4") %>% select(time))$time,
-    as.vector(allClassifier %>% filter(func=="transmitRaw", source=="Overflow4") %>% select(time))$time,
-    alternative = "less"
+##### Is transmit time generally smaller than transmit raw time among all classifiers and larger files ####
+transmitTime <- c(
+    as.vector(allClassifier %>% filter(func=="transmit", inFile %in% c("smallInt_superLarge", "largeInt_superLarge", "bolzmann_superLarge")) %>% select(time))$time,
+    as.vector(allClassifier %>% filter(func=="transmitRaw", inFile %in% c("smallInt_superLarge", "largeInt_superLarge", "bolzmann_superLarge")) %>% select(time))$time
 )
+group = as.factor(c(rep("transmit", length(transmitTime)%/%2), rep("transmitRaw", length(transmitTime)%/%2)))
 
-# For Overflow8 compressor
-DescTools::SignTest(
-    as.vector(allClassifier %>% filter(func=="transmit", source=="Overflow8") %>% select(time))$time,
-    as.vector(allClassifier %>% filter(func=="transmitRaw", source=="Overflow8") %>% select(time))$time,
-    alternative = "less"
-)
+coin::independence_test(transmitTime~group, alternative = "less", distribution = "approximate")
+#' 	    Approximative General Independence Test
+#'
+#' data:  transmitTime by group (transmit, transmitRaw)
+#' Z = -4.9154, p-value = 1e-04
+#' alternative hypothesis: less
+#' Simple answer: yes
 
-# For Overflow12 compressor
-DescTools::SignTest(
-    as.vector(allClassifier %>% filter(func=="transmit", source=="Overflow12") %>% select(time))$time,
-    as.vector(allClassifier %>% filter(func=="transmitRaw", source=="Overflow12") %>% select(time))$time,
-    alternative = "less"
-)
 
-# For smallInt_small
-DescTools::SignTest(
-    as.vector(allClassifier %>% filter(func=="transmit", inFile=="smallInt_small") %>% select(time))$time,
-    as.vector(allClassifier %>% filter(func=="transmitRaw", inFile=="smallInt_small") %>% select(time))$time,
-    alternative = "less"
-)
 
-# For smallInt_medium
-DescTools::SignTest(
-    as.vector(allClassifier %>% filter(func=="transmit", inFile=="smallInt_medium") %>% select(time))$time,
-    as.vector(allClassifier %>% filter(func=="transmitRaw", inFile=="smallInt_medium") %>% select(time))$time,
-    alternative = "less"
-)
 
-# For smallInt_large
-DescTools::SignTest(
-    as.vector(allClassifier %>% filter(func=="transmit", inFile=="smallInt_large") %>% select(time))$time,
-    as.vector(allClassifier %>% filter(func=="transmitRaw", inFile=="smallInt_large") %>% select(time))$time,
-    alternative = "less"
-)
 
-# For smallInt_superLarge
-DescTools::SignTest(
-    as.vector(allClassifier %>% filter(func=="transmit", inFile=="smallInt_superLarge") %>% select(time))$time,
-    as.vector(allClassifier %>% filter(func=="transmitRaw", inFile=="smallInt_superLarge") %>% select(time))$time,
-    alternative = "less"
-)
 
-# For largeInt_small
-DescTools::SignTest(
-    as.vector(allClassifier %>% filter(func=="transmit", inFile=="largeInt_small") %>% select(time))$time,
-    as.vector(allClassifier %>% filter(func=="transmitRaw", inFile=="largeInt_small") %>% select(time))$time,
-    alternative = "less"
+##### Is transmit time generally smaller than transmit raw time among all classifiers and large files ####
+transmitTime <- c(
+    as.vector(allClassifier %>% filter(func=="transmit", inFile %in% c("smallInt_large", "largeInt_large", "bolzmann_large")) %>% select(time))$time,
+    as.vector(allClassifier %>% filter(func=="transmitRaw", inFile %in% c("smallInt_large", "largeInt_large", "bolzmann_large")) %>% select(time))$time
 )
+group = as.factor(c(rep("transmit", length(transmitTime)%/%2), rep("transmitRaw", length(transmitTime)%/%2)))
 
-# For largeInt_medium
-DescTools::SignTest(
-    as.vector(allClassifier %>% filter(func=="transmit", inFile=="largeInt_medium") %>% select(time))$time,
-    as.vector(allClassifier %>% filter(func=="transmitRaw", inFile=="largeInt_medium") %>% select(time))$time,
-    alternative = "less"
-)
+coin::independence_test(transmitTime~group, alternative = "less", distribution = "approximate")
+#'  	Approximative General Independence Test
+#'
+#' data:  transmitTime by group (transmit, transmitRaw)
+#' Z = -2.6786, p-value = 0.0037
+#' alternative hypothesis: less
+#' Simple answer: yes
 
-# For largeInt_large
-DescTools::SignTest(
-    as.vector(allClassifier %>% filter(func=="transmit", inFile=="largeInt_large") %>% select(time))$time,
-    as.vector(allClassifier %>% filter(func=="transmitRaw", inFile=="largeInt_large") %>% select(time))$time,
-    alternative = "less"
-)
 
-# For largeInt_superLarge
-DescTools::SignTest(
-    as.vector(allClassifier %>% filter(func=="transmit", inFile=="largeInt_superLarge") %>% select(time))$time,
-    as.vector(allClassifier %>% filter(func=="transmitRaw", inFile=="largeInt_superLarge") %>% select(time))$time,
-    alternative = "less"
+
+
+
+
+##### Is transmit time generally smaller than transmit raw time among all classifiers and medium-sized files ####
+transmitTime <- c(
+    as.vector(allClassifier %>% filter(func=="transmit", inFile %in% c("smallInt_medium", "largeInt_medium", "bolzmann_medium")) %>% select(time))$time,
+    as.vector(allClassifier %>% filter(func=="transmitRaw", inFile %in% c("smallInt_medium", "largeInt_medium", "bolzmann_medium")) %>% select(time))$time
 )
+group = as.factor(c(rep("transmit", length(transmitTime)%/%2), rep("transmitRaw", length(transmitTime)%/%2)))
+
+coin::independence_test(transmitTime~group, alternative = "less", distribution = "approximate")
+#'  	Approximative General Independence Test
+#'
+#' data:  transmitTime by group (transmit, transmitRaw)
+#' Z = -0.12648, p-value = 0.4594
+#' alternative hypothesis: less
+#' Simple answer: no warranties
+
+
+
+
+
+
+##### Is transmit time generally smaller than transmit raw time among all classifiers and small files ####
+transmitTime <- c(
+    as.vector(allClassifier %>% filter(func=="transmit", inFile %in% c("smallInt_small", "largeInt_small", "bolzmann_small")) %>% select(time))$time,
+    as.vector(allClassifier %>% filter(func=="transmitRaw", inFile %in% c("smallInt_small", "largeInt_small", "bolzmann_small")) %>% select(time))$time
+)
+group = as.factor(c(rep("transmit", length(transmitTime)%/%2), rep("transmitRaw", length(transmitTime)%/%2)))
+
+coin::independence_test(transmitTime~group, alternative = "less", distribution = "approximate")
+#'  	Approximative General Independence Test
+#'
+#' data:  transmitTime by group (transmit, transmitRaw)
+#' Z = -0.60948, p-value = 0.2592
+#' alternative hypothesis: less
+#' Simple answer: no warranties
+

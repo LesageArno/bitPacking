@@ -36,7 +36,7 @@ For each type of compression, you must implement the following functions:
 In addition, you must implement the function
 - int get(int i) which returns the value of the ith integer in the compressed array.
 
-You must implement measures to time the execution of each function. Be sure to implement a protocol that you explain carefully, which measures as accurately as possible the time taken by each function. Based on these times, you must calculate the transmission time for a latency t at which compression becomes worthwhile.
+**You must implement measures to time the execution of each function. Be sure to implement a protocol that you explain carefully, which measures as accurately as possible the time taken by each function. Based on these times, you must calculate the transmission time for a latency t at which compression becomes worthwhile.**
 
 We now want to perform compression with overflow areas. 
 Indeed, if a single number in the initial array requires a large number of bits k and the other numbers require
@@ -68,8 +68,8 @@ I reserve the right to ask for an oral presentation to obtain further informatio
 
 #### **TODO:** 
 - First representation: done (+tested)
-- Second representation: done
-- Third representation: done
+- Second representation: done (+tested)
+- Third representation: done (+tested)
 - Negative: Handeled
 - GitHub: todo
 - Report: todo
